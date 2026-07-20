@@ -1886,7 +1886,7 @@ document.addEventListener('click', function(e){
     });
 
 });
-/*=== demo comment ===*/
+
   document.addEventListener('paste', function(e){
     if(!conversationId) return;
     var items = e.clipboardData.items;
