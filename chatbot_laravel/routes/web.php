@@ -79,6 +79,14 @@ Route::prefix('agent')
             ->middleware('not_viewer')
             ->name('agent.conversations.reply');
 
+        Route::post('/conversations/{conversation}/messages/{message}/edit', [ConversationController::class, 'editMessage'])
+            ->middleware('not_viewer')
+            ->name('agent.messages.edit');
+
+        Route::post('/conversations/{conversation}/messages/{message}/delete', [ConversationController::class, 'deleteMessage'])
+            ->middleware('not_viewer')
+            ->name('agent.messages.delete');
+
         Route::post('/conversations/{conversation}/resolve', [ConversationController::class, 'resolve'])
             ->middleware('not_viewer')
             ->name('agent.conversations.resolve');
