@@ -64,7 +64,10 @@
         @else
 
             {{-- Outer row --}}
-            <div data-mid="{{ $message->id }}" style="display:flex;{{ $message->sender_type === 'agent' ? 'justify-content:flex-end;' : 'justify-content:flex-start;' }};margin-bottom:6px;">
+            @php
+                $isOwnAgentMsg = $message->sender_type === 'agent' && $message->sender_id === auth()->id();
+            @endphp
+            <div data-mid="{{ $message->id }}" class="{{ $isOwnAgentMsg ? 'own-msg' : '' }}" style="display:flex;{{ $message->sender_type === 'agent' ? 'justify-content:flex-end;' : 'justify-content:flex-start;' }};margin-bottom:6px;">
 
                 {{-- Inner column: shrinks to content, max 60% --}}
                 <div style="display:inline-flex;flex-direction:column;max-width:85%;align-items:{{ $message->sender_type === 'agent' ? 'flex-end;' : 'flex-start;' }}">
@@ -101,6 +104,13 @@
                         </div>
 
                     </div>
+
+                    @if($isOwnAgentMsg && !$message->is_deleted && !$message->attachment)
+                        <div class="msg-actions">
+                            <button type="button" class="msg-action-btn msg-edit-btn" title="Edit">✎ Edit</button>
+                            <button type="button" class="msg-action-btn msg-del-btn" title="Delete">🗑 Delete</button>
+                        </div>
+                    @endif
 
                 </div>
 
@@ -556,6 +566,34 @@
 
 }
 
+/* ── Agent-side message edit/delete ── */
+[data-mid].own-msg { position: relative; }
+.msg-actions {
+    display: flex; gap: 8px; margin-top: 3px; opacity: 0; height: 0;
+    overflow: hidden; transition: opacity 0.15s ease;
+}
+[data-mid].own-msg:hover .msg-actions,
+[data-mid].own-msg.editing .msg-actions { opacity: 1; height: auto; overflow: visible; }
+.msg-action-btn {
+    background: none; border: none; cursor: pointer; font-size: 11px;
+    color: #a78bfa; padding: 1px 2px; line-height: 1;
+}
+.msg-action-btn:hover { color: #4f46e5; }
+.msg-action-btn.msg-del-btn:hover { color: #dc2626; }
+.msg-edit-box { display: flex; flex-direction: column; gap: 6px; max-width: 260px; margin-left: auto; }
+.msg-edit-textarea {
+    width: 100%; box-sizing: border-box; border: 1.5px solid #c7d2fe;
+    border-radius: 12px; padding: 7px 10px; font-size: 13px;
+    outline: none; resize: none; font-family: inherit; color: #1e293b;
+}
+.msg-edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.msg-edit-save-btn, .msg-edit-cancel-btn {
+    border: none; background: none; cursor: pointer;
+    font-size: 11px; font-weight: 600; padding: 2px 4px;
+}
+.msg-edit-save-btn { color: #4f46e5; }
+.msg-edit-cancel-btn { color: #94a3b8; }
+
 </style>
 
 
@@ -947,23 +985,27 @@ function sendAgentReply() {
 
 
     var wrapper = document.createElement('div');
+wrapper.className = 'own-msg';
 wrapper.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:2px;';
 
 var outer = document.createElement('div');
-outer.style.cssText = 'max-width:85%;';
+outer.style.cssText = 'display:inline-flex;flex-direction:column;max-width:85%;align-items:flex-end;';
 
 var sender = document.createElement('div');
 sender.style.cssText = 'font-size:11px;font-weight:600;color:#8b5cf6;margin-bottom:4px;text-align:right;';
 sender.textContent = '{{ auth()->user()->name }}';
 
 var bubble = document.createElement('div');
+bubble.className = 'msg-bubble';
 bubble.style.cssText = 'display:table;font-size:14px;line-height:1.55;word-break:break-word;overflow-wrap:anywhere;padding:10px 14px 8px 14px;max-width:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border-radius:18px 18px 4px 18px;box-shadow:0 6px 20px rgba(102,126,234,0.35);margin-left:auto;';
 
 var body = document.createElement('span');
+body.className = 'msg-body';
 body.style.cssText = 'word-break:break-word;overflow-wrap:anywhere;';
 body.textContent = text;
 
     var time = document.createElement('div');
+    time.className = 'msg-time';
     time.style.cssText = 'font-size:10px;margin-top:5px;opacity:0.55;text-align:right;';
     time.textContent = 'Just now';
 
@@ -999,13 +1041,24 @@ body.textContent = text;
 
     })
 
-    .then(function(r) {
+    .then(function(r) { return r.json().catch(function(){ return null; }); })
+
+    .then(function(data) {
 
         isSending = false;
 
         btn.disabled = false;
 
         btn.textContent = 'Send';
+
+        if (data && data.message_id) {
+            wrapper.setAttribute('data-mid', data.message_id);
+            var actions = document.createElement('div');
+            actions.className = 'msg-actions';
+            actions.innerHTML = '<button type="button" class="msg-action-btn msg-edit-btn" title="Edit">✎ Edit</button>' +
+                '<button type="button" class="msg-action-btn msg-del-btn" title="Delete">🗑 Delete</button>';
+            outer.appendChild(actions);
+        }
 
     })
 
@@ -1034,6 +1087,128 @@ if (replyInput) replyInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') sendAgentReply();
 
 });
+
+// ── AGENT-SIDE MESSAGE EDIT / DELETE (own messages only) ──────
+box.addEventListener('click', function(e) {
+    var editBtn = e.target.closest && e.target.closest('.msg-edit-btn');
+    var delBtn  = e.target.closest && e.target.closest('.msg-del-btn');
+    if (!editBtn && !delBtn) return;
+
+    var wrap = e.target.closest('[data-mid]');
+    if (!wrap) return;
+    var mid = wrap.getAttribute('data-mid');
+    if (!mid) return;
+
+    if (editBtn) startEditAgentMessage(wrap, mid);
+    else if (delBtn) deleteAgentMessage(wrap, mid);
+});
+
+function startEditAgentMessage(wrap, mid) {
+    if (wrap.classList.contains('editing')) return;
+    var bubble = wrap.querySelector('.msg-bubble');
+    var bodyEl = wrap.querySelector('.msg-body');
+    if (!bubble || !bodyEl) return;
+    var currentText = bodyEl.textContent.trim();
+    wrap.classList.add('editing');
+
+    var actions = wrap.querySelector('.msg-actions');
+    bubble.style.display = 'none';
+    if (actions) actions.style.display = 'none';
+
+    var editBox = document.createElement('div');
+    editBox.className = 'msg-edit-box';
+    editBox.innerHTML = '<textarea class="msg-edit-textarea" rows="2"></textarea>' +
+        '<div class="msg-edit-actions">' +
+        '<button type="button" class="msg-edit-cancel-btn">Cancel</button>' +
+        '<button type="button" class="msg-edit-save-btn">Save</button>' +
+        '</div>';
+    bubble.parentNode.insertBefore(editBox, bubble);
+    var textarea = editBox.querySelector('.msg-edit-textarea');
+    textarea.value = currentText;
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+    function cleanup() {
+        editBox.parentNode.removeChild(editBox);
+        bubble.style.display = '';
+        if (actions) actions.style.display = '';
+        wrap.classList.remove('editing');
+    }
+
+    editBox.querySelector('.msg-edit-cancel-btn').addEventListener('click', cleanup);
+    editBox.querySelector('.msg-edit-save-btn').addEventListener('click', function() {
+        var newText = textarea.value.trim();
+        if (!newText || newText === currentText) { cleanup(); return; }
+
+        fetch(window.location.origin + '/chatbot/agent/conversations/{{ $conversation->id }}/messages/' + mid + '/edit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ message: newText })
+        })
+        .then(function(r) { return r.json().catch(function(){ return null; }).then(function(d){ return { ok: r.ok, data: d }; }); })
+        .then(function(res) {
+            var data = res.data;
+            if (!res.ok || !data || data.error || data.success !== true || !data.message || typeof data.message.body !== 'string') {
+                cleanup();
+                return;
+            }
+            bodyEl.textContent = data.message.body;
+            if (!bubble.querySelector('.msg-edited-tag')) {
+                var tag = document.createElement('span');
+                tag.className = 'msg-edited-tag';
+                tag.style.cssText = 'font-size:10px;opacity:0.6;font-style:italic;margin-left:4px;';
+                tag.textContent = '(edited)';
+                var timeEl = bubble.querySelector('.msg-time');
+                if (timeEl) bubble.insertBefore(tag, timeEl);
+                else bubble.appendChild(tag);
+            }
+            cleanup();
+        })
+        .catch(function() { cleanup(); });
+    });
+
+    textarea.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); editBox.querySelector('.msg-edit-save-btn').click(); }
+        if (e.key === 'Escape') cleanup();
+    });
+}
+
+function deleteAgentMessage(wrap, mid) {
+    if (!window.confirm('Delete this message?')) return;
+    fetch(window.location.origin + '/chatbot/agent/conversations/{{ $conversation->id }}/messages/' + mid + '/delete', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        }
+    })
+    .then(function(r) { return r.json().catch(function(){ return null; }).then(function(d){ return { ok: r.ok, data: d }; }); })
+    .then(function(res) {
+        var data = res.data;
+        if (!res.ok || !data || data.error || data.success !== true) return;
+        var bubble = wrap.querySelector('.msg-bubble');
+        if (bubble) {
+            bubble.classList.add('msg-bubble-deleted');
+            bubble.style.background = 'transparent';
+            bubble.style.color = '#94a3b8';
+            bubble.style.border = '1px dashed #cbd5e1';
+            bubble.style.boxShadow = 'none';
+            bubble.style.fontStyle = 'italic';
+            var bodyEl = bubble.querySelector('.msg-body');
+            if (bodyEl) bodyEl.textContent = 'Message deleted';
+            var tagEl = bubble.querySelector('.msg-edited-tag');
+            if (tagEl) tagEl.remove();
+        }
+        var actionsEl = wrap.querySelector('.msg-actions');
+        if (actionsEl) actionsEl.parentNode.removeChild(actionsEl);
+    })
+    .catch(function() {});
+}
 
 
 
