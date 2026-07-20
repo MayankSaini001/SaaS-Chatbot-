@@ -879,7 +879,8 @@ channel.bind('message.sent', function(data) {
         addAgentBubble(
 			body,
 			msgTime || new Date().toISOString(),
-			data.agent_name
+			data.agent_name,
+			msgId
 		);
         playNotifSound();
         markAllSeen();
@@ -887,19 +888,22 @@ channel.bind('message.sent', function(data) {
     });
     channel.bind('message.edited', function(data) {
       if (!data || !data.id) return;
-      var wrap = msgs.querySelector('.cb-msg-v-wrap[data-mid="' + data.id + '"]');
+      var wrap = msgs.querySelector('[data-mid="' + data.id + '"]');
       if (!wrap) return;
-      var bubble = wrap.querySelector('.cb-bubble-v');
+      var bubble = wrap.querySelector('.cb-bubble-v, .cb-bubble-a');
       if (bubble && !bubble.classList.contains('cb-deleted-bubble')) {
         bubble.innerHTML = escHtml(data.body) + '<span class="cb-edited-tag">(edited)</span>';
       }
     });
     channel.bind('message.deleted', function(data) {
       if (!data || !data.id) return;
-      var wrap = msgs.querySelector('.cb-msg-v-wrap[data-mid="' + data.id + '"]');
+      var wrap = msgs.querySelector('[data-mid="' + data.id + '"]');
       if (!wrap) return;
-      var rowV = wrap.querySelector('.cb-row-v');
-      if (rowV) rowV.innerHTML = '<div class="cb-bubble-v cb-deleted-bubble">Message deleted</div>';
+      var bubble = wrap.querySelector('.cb-bubble-v, .cb-bubble-a');
+      if (bubble) {
+        bubble.classList.add('cb-deleted-bubble');
+        bubble.innerHTML = 'Message deleted';
+      }
       var actionsEl = wrap.querySelector('.cb-msg-actions');
       if (actionsEl) actionsEl.parentNode.removeChild(actionsEl);
     });
@@ -1022,12 +1026,17 @@ lastMessageId = Math.max(lastMessageId, m.id);
 
     } else if (m.sender_type === 'agent') {
 
-      if (m.attachment) {
+      if (m.is_deleted) {
+
+        addAgentBubble('', m.created_at, m.agent_name, m.id, false, true);
+
+      } else if (m.attachment) {
 
         addAgentBubble(
           '<img src="' + m.attachment + '" style="max-width:220px;border-radius:8px;display:block;">',
           m.created_at,
-          m.agent_name
+          m.agent_name,
+          m.id, m.is_edited
         );
 
       } else {
@@ -1035,7 +1044,8 @@ lastMessageId = Math.max(lastMessageId, m.id);
         addAgentBubble(
           m.body,
           m.created_at,
-          m.agent_name
+          m.agent_name,
+          m.id, m.is_edited
         );
 
       }
@@ -1221,6 +1231,8 @@ function buildMessageEl(m) {
 
   if (m.sender_type === 'agent') {
 
+    if (m.id) wrap.setAttribute('data-mid', m.id);
+
     wrap.innerHTML = `
       <div class="cb-row-a">
         <div class="cb-icon">
@@ -1233,12 +1245,14 @@ function buildMessageEl(m) {
         <div>
           ${m.agent_name ? `<div class="cb-name">${m.agent_name}</div>` : ''}
 
-          <div class="cb-bubble-a">
+          <div class="cb-bubble-a${m.is_deleted ? ' cb-deleted-bubble' : ''}">
             ${
-              m.attachment
-                ? '<img src="' + m.attachment + '" style="max-width:220px;border-radius:8px;display:block;">'
-                : escHtml(m.body)
-            }
+              m.is_deleted
+                ? 'Message deleted'
+                : (m.attachment
+                    ? '<img src="' + m.attachment + '" style="max-width:220px;border-radius:8px;display:block;">'
+                    : escHtml(m.body))
+            }${(m.is_edited && !m.is_deleted) ? '<span class="cb-edited-tag">(edited)</span>' : ''}
           </div>
         </div>
 
@@ -1401,12 +1415,17 @@ function renderAll(list) {
 
     } else if (m.sender_type === 'agent') {
 
-      if (m.attachment) {
+      if (m.is_deleted) {
+
+        addAgentBubble('', m.created_at, m.agent_name, m.id, false, true);
+
+      } else if (m.attachment) {
 
         addAgentBubble(
           '<img src="' + m.attachment + '" style="max-width:220px;border-radius:8px;display:block;">',
           m.created_at,
-          m.agent_name
+          m.agent_name,
+          m.id, m.is_edited
         );
 
       } else if (m.body && m.body !== '[IMAGE]') {
@@ -1414,7 +1433,8 @@ function renderAll(list) {
         addAgentBubble(
           m.body,
           m.created_at,
-          m.agent_name
+          m.agent_name,
+          m.id, m.is_edited
         );
 
       }
@@ -1451,10 +1471,12 @@ function renderAll(list) {
 
   msgs.scrollTop = msgs.scrollHeight;
 }
-function addAgentBubble(text, time, name) {
+function addAgentBubble(text, time, name, id, isEdited, isDeleted) {
   var isImg = typeof text === 'string' && /^\s*<img\s/i.test(text);
-  var safeText = isImg ? text : escHtml(text);
+  var deleted = !!isDeleted;
+  var safeText = deleted ? 'Message deleted' : (isImg ? text : escHtml(text));
   var wrap = document.createElement('div');
+  if (id) wrap.setAttribute('data-mid', id);
   wrap.innerHTML = `
     <div class="cb-row-a">
       <div class="cb-icon">
@@ -1466,8 +1488,8 @@ function addAgentBubble(text, time, name) {
 
       <div>
        ${name ? `<div class="cb-name">${escHtml(name)}</div>` : ''}
-        <div class="cb-bubble-a">
-          ${safeText}  
+        <div class="cb-bubble-a${deleted ? ' cb-deleted-bubble' : ''}">
+          ${safeText}${(isEdited && !deleted) ? '<span class="cb-edited-tag">(edited)</span>' : ''}
         </div>
       </div>
     </div>
