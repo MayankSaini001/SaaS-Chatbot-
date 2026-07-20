@@ -259,10 +259,84 @@ class ConversationController extends Controller
         }
 
         if ($request->ajax() || $request->wantsJson()) {
-            return response()->json(['success' => true]);
+            return response()->json(['success' => true, 'message_id' => $message->id]);
         }
 
         return back();
+    }
+
+    /**
+     * Agent-side message edit — agent apna khud ka bheja hua message edit kar sake.
+     */
+    public function editMessage(Request $request, Conversation $conversation, Message $message)
+    {
+        $request->validate([
+            'message' => 'required|string|max:5000',
+        ]);
+
+        if ($message->conversation_id !== $conversation->id || $message->sender_type !== 'agent') {
+            abort(404);
+        }
+        if ($message->sender_id !== auth()->id()) {
+            abort(403, 'You can only edit your own messages.');
+        }
+        if ($message->is_deleted) {
+            return response()->json(['error' => 'Message deleted'], 422);
+        }
+        if ($message->attachment) {
+            return response()->json(['error' => 'Cannot edit an attachment'], 422);
+        }
+        if ($message->created_at->diffInMinutes(now()) > 15) {
+            return response()->json(['error' => 'Edit window expired'], 422);
+        }
+
+        $message->body      = trim($request->message);
+        $message->is_edited = true;
+        $message->edited_at = now();
+        $message->save();
+
+        try {
+            broadcast(new \App\Events\MessageEdited($message))->toOthers();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('MessageEdited (agent) broadcast failed: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => [
+                'id'        => $message->id,
+                'body'      => $message->body,
+                'is_edited' => true,
+            ],
+        ]);
+    }
+
+    /**
+     * Agent-side message delete — agent apna khud ka bheja hua message delete kar sake.
+     */
+    public function deleteMessage(Conversation $conversation, Message $message)
+    {
+        if ($message->conversation_id !== $conversation->id || $message->sender_type !== 'agent') {
+            abort(404);
+        }
+        if ($message->sender_id !== auth()->id()) {
+            abort(403, 'You can only delete your own messages.');
+        }
+
+        if (!$message->is_deleted) {
+            $message->is_deleted = true;
+            $message->body       = '';
+            $message->attachment = null;
+            $message->save();
+
+            try {
+                broadcast(new \App\Events\MessageDeleted($message->id, $conversation->id, 'agent'))->toOthers();
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('MessageDeleted (agent) broadcast failed: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json(['success' => true]);
     }
 
     public function assign(Request $request, Conversation $conversation)
