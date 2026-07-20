@@ -13,7 +13,6 @@ return [
     |
     */
 
-    /*added comment*/
     'name' => env('APP_NAME', 'Laravel'),
 
     /*
