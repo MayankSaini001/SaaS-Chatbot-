@@ -729,6 +729,18 @@ channel.bind('conversation.resolved', function() {
 
 });
 
+// Conversation reopened (e.g. visitor unblocked) — unlock the panel live
+channel.bind('conversation.reopened', function() {
+
+    if (!window.__convResolved) return;
+
+    window.__convResolved = false;
+
+    // Reply box + input ko simplest/sabse reliable tareeke se restore karo
+    window.location.reload();
+
+});
+
 // Internal Notes: live sync across agents viewing the same conversation
 channel.bind('note.added', function(data) {
     if (data.actor_id === currentUserId) return; // already rendered locally by the adder
@@ -821,6 +833,13 @@ setInterval(function() {
 
         // Agar already resolved hai toh polling band karo
         if (data.status === 'resolved') return;
+
+        // Conversation reopen ho gayi (unblock hone ke baad) — panel unlock karo
+        if (window.__convResolved && data.status !== 'resolved') {
+            window.__convResolved = false;
+            window.location.reload();
+            return;
+        }
 
 
 
