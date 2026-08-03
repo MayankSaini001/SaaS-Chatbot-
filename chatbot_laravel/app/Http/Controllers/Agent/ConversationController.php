@@ -131,7 +131,35 @@ class ConversationController extends Controller
             ->where('ip_address', $conversation->visitor_ip)
             ->delete();
 
-        return back()->with('success', 'Visitor unblocked.');
+        // Blocking auto-resolves the conversation, so unblocking must
+        // reopen it — otherwise the visitor's old conversation stays
+        // locked forever (reply box disabled, widget rejects messages,
+        // and a fresh chat would start a brand new conversation instead
+        // of continuing this one).
+        $wasResolved = $conversation->status === 'resolved';
+
+        if ($wasResolved) {
+            $conversation->update(['status' => 'open']);
+        }
+
+        $msg = $conversation->messages()->create([
+            'sender_type' => 'system',
+            'sender_id'   => null,
+            'body'        => '✅ This visitor has been unblocked by ' . $user->name . '. Conversation reopened.',
+            'is_read'     => true,
+        ]);
+
+        try {
+            broadcast(new \App\Events\MessageSent($msg));
+        } catch (\Throwable $e) {}
+
+        if ($wasResolved) {
+            try {
+                broadcast(new \App\Events\ConversationReopened($conversation->id));
+            } catch (\Throwable $e) {}
+        }
+
+        return back()->with('success', 'Visitor unblocked. Conversation is active again.');
     }
 
     // Agents list
