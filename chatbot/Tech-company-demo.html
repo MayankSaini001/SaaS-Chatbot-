@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>TechNova | Future Technology Solutions</title>
+
+
+<style>
+
+/* ---------- Global ---------- */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',Arial,sans-serif;
+}
+
+
+body{
+
+    background:#f8fbff;
+    color:#0f172a;
+
+}
+
+
+
+/* ---------- Navbar ---------- */
+
+
+header{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:22px 8%;
+
+    background:rgba(255,255,255,0.75);
+
+    backdrop-filter:blur(15px);
+
+    position:sticky;
+    top:0;
+
+    z-index:1000;
+
+    border-bottom:1px solid rgba(37,99,235,0.1);
+
+    box-shadow:
+    0 8px 30px rgba(15,23,42,0.08);
+
+}
+
+
+
+.logo{
+
+    font-size:32px;
+
+    font-weight:900;
+
+    letter-spacing:-1px;
+
+
+    background:linear-gradient(
+        90deg,
+        #2563eb,
+        #06b6d4,
+        #7c3aed
+    );
+
+
+    -webkit-background-clip:text;
+
+    -webkit-text-fill-color:transparent;
+
+}
+
+
+
+.logo::after{
+
+    content:"";
+
+    display:block;
+
+    width:45px;
+
+    height:4px;
+
+    background:#2563eb;
+
+    border-radius:10px;
+
+    margin-top:5px;
+
+}
+
+
+
+nav{
+
+    display:flex;
+
+    gap:35px;
+
+}
+
+
+
+nav a{
+
+    text-decoration:none;
+
+    color:#334155;
+
+    font-weight:600;
+
+    position:relative;
+
+    transition:.3s;
+
+}
+
+
+
+nav a::after{
+
+    content:"";
+
+    position:absolute;
+
+    bottom:-8px;
+
+    left:0;
+
+    width:0%;
+
+    height:3px;
+
+    background:#2563eb;
+
+    border-radius:10px;
+
+    transition:.3s;
+
+}
+
+
+nav a:hover{
+
+    color:#2563eb;
+
+}
+
+
+nav a:hover::after{
+
+    width:100%;
+
+}
+
+
+
+
+/* ---------- Hero ---------- */
+
+
+.hero{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:80px 8%;
+
+    gap:50px;
+
+}
+
+
+
+
+.hero-text{
+
+    width:50%;
+
+}
+
+
+
+.hero-text h1{
+
+    font-size:58px;
+
+    line-height:1.15;
+
+    font-weight:900;
+
+}
+
+
+
+.hero-text h1 span{
+
+
+    background:linear-gradient(
+        90deg,
+        #2563eb,
+        #06b6d4,
+        #7c3aed
+    );
+
+
+    -webkit-background-clip:text;
+
+    -webkit-text-fill-color:transparent;
+
+}
+
+
+
+
+.hero-text p{
+
+    margin:25px 0;
+
+    color:#64748b;
+
+    font-size:18px;
+
+    line-height:1.7;
+
+}
+
+
+
+
+.btn{
+
+    display:inline-block;
+
+    padding:15px 35px;
+
+    background:#2563eb;
+
+    color:white;
+
+    border-radius:30px;
+
+    text-decoration:none;
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+
+.btn:hover{
+
+    background:#1d4ed8;
+
+    transform:translateY(-4px);
+
+}
+
+
+
+
+
+/* ---------- Hero Image ---------- */
+
+
+.hero-image{
+
+    width:470px;
+
+    height:390px;
+
+    border-radius:30px;
+
+    overflow:hidden;
+
+    position:relative;
+
+    animation:float 4s infinite ease-in-out;
+
+    box-shadow:
+    0 20px 50px rgba(37,99,235,.25);
+
+}
+
+
+
+.hero-image img{
+
+    width:100%;
+
+    height:100%;
+
+    object-fit:cover;
+
+}
+
+
+
+
+.hero-image::before{
+
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    background:linear-gradient(
+
+        135deg,
+
+        rgba(37,99,235,.45),
+
+        rgba(6,182,212,.2)
+
+    );
+
+    z-index:1;
+
+}
+
+
+
+.hero-image::after{
+
+    content:"AI POWERED";
+
+    position:absolute;
+
+    bottom:30px;
+
+    left:30px;
+
+    z-index:2;
+
+
+    background:white;
+
+    color:#2563eb;
+
+    padding:12px 25px;
+
+    border-radius:30px;
+
+    font-weight:bold;
+
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+
+}
+
+
+
+@keyframes float{
+
+    0%,100%{
+
+        transform:translateY(0);
+
+    }
+
+
+    50%{
+
+        transform:translateY(-15px);
+
+    }
+
+}
+
+
+
+/* ---------- Services ---------- */
+
+
+.services{
+
+    padding:70px 8%;
+
+    text-align:center;
+
+}
+
+
+
+.services h2{
+
+    font-size:40px;
+
+}
+
+
+
+.cards{
+
+    display:flex;
+
+    gap:30px;
+
+    margin-top:40px;
+
+}
+
+
+
+.card{
+
+    flex:1;
+
+    background:white;
+
+    padding:35px 25px;
+
+    border-radius:20px;
+
+    box-shadow:
+
+    0 10px 30px rgba(0,0,0,.07);
+
+    transition:.3s;
+
+}
+
+
+
+.card:hover{
+
+    transform:translateY(-12px);
+
+    box-shadow:
+
+    0 20px 40px rgba(37,99,235,.15);
+
+}
+
+
+
+.card img{
+
+    width:80px;
+
+    margin-bottom:20px;
+
+}
+
+
+.card h3{
+
+    color:#2563eb;
+
+    margin-bottom:15px;
+
+}
+
+
+.card p{
+
+    color:#64748b;
+
+}
+
+
+
+
+/* ---------- About ---------- */
+
+
+.about{
+
+    background:#eaf4ff;
+
+    padding:60px 8%;
+
+    text-align:center;
+
+}
+
+
+.about h2{
+
+    font-size:36px;
+
+    margin-bottom:20px;
+
+}
+
+
+.about p{
+
+    color:#475569;
+
+    font-size:18px;
+
+}
+
+
+
+/* ---------- Footer ---------- */
+
+
+footer{
+
+    background:#0f172a;
+
+    color:white;
+
+    text-align:center;
+
+    padding:25px;
+
+}
+
+
+
+/* ---------- Mobile ---------- */
+
+
+@media(max-width:900px){
+
+
+header{
+
+    padding:20px 5%;
+
+}
+
+
+nav{
+
+    display:none;
+
+}
+
+
+
+.hero{
+
+    flex-direction:column;
+
+}
+
+
+
+.hero-text{
+
+    width:100%;
+
+}
+
+
+
+.hero-text h1{
+
+    font-size:42px;
+
+}
+
+
+
+.hero-image{
+
+    width:100%;
+
+    height:320px;
+
+}
+
+
+
+.cards{
+
+    flex-direction:column;
+
+}
+
+
+}
+
+
+
+</style>
+
+
+</head>
+
+
+
+<body>
+<script src="https://knights.topscripts.in/chatbot/js/widget.js" data-token="j4lhomMgN2A3tuSlG73B3I1d0n9YWB9l"></script>
+
+
+<header>
+
+
+<div class="logo">
+TechNova
+</div>
+
+
+<nav>
+
+<a href="#">Home</a>
+
+<a href="#">Services</a>
+
+<a href="#">About</a>
+
+<a href="#">Contact</a>
+
+</nav>
+
+
+</header>
+
+
+
+
+
+<section class="hero">
+
+
+<div class="hero-text">
+
+
+<h1>
+
+Future <span>Technology</span>
+<br>
+Solutions
+
+</h1>
+
+
+<p>
+
+We create innovative software, AI solutions and digital
+experiences that help businesses grow faster.
+
+</p>
+
+
+<a href="#" class="btn">
+
+Explore Now
+
+</a>
+
+
+</div>
+
+
+
+
+<div class="hero-image">
+
+<img src="https://images.unsplash.com/photo-1518770660439-4636190af475">
+
+</div>
+
+
+
+</section>
+
+
+
+
+
+
+<section class="services">
+
+
+<h2>
+Our Services
+</h2>
+
+
+
+<div class="cards">
+
+
+
+<div class="card">
+
+<img src="https://cdn-icons-png.flaticon.com/512/906/906324.png">
+
+<h3>
+Software Development
+</h3>
+
+<p>
+Modern websites and applications.
+</p>
+
+</div>
+
+
+
+
+<div class="card">
+
+<img src="https://cdn-icons-png.flaticon.com/512/2103/2103633.png">
+
+<h3>
+Artificial Intelligence
+</h3>
+
+<p>
+Smart AI powered solutions.
+</p>
+
+</div>
+
+
+
+
+<div class="card">
+
+<img src="https://cdn-icons-png.flaticon.com/512/2920/2920277.png">
+
+<h3>
+Cloud Technology
+</h3>
+
+<p>
+Secure cloud infrastructure.
+</p>
+
+</div>
+
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+<section class="about">
+
+
+<h2>
+Building The Future With Technology
+</h2>
+
+
+<p>
+Innovative digital solutions for modern businesses.
+</p>
+
+
+</section>
+
+
+
+
+
+<footer>
+
+© 2026 TechNova | Future Technology Solutions
+
+</footer>
+
+
+
+</body>
+
+</html>
