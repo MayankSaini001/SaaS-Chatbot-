@@ -8,7 +8,11 @@ use Carbon\Carbon;
 class Widget extends Model
 {
     protected $fillable = [
+<<<<<<< HEAD
 		'tenant_id', 'embed_token', 'color', 'name',
+=======
+		'tenant_id', 'embed_token', 'color', 
+>>>>>>> origin/main
 		'position', 'greeting', 'is_active', 'title',
 		'business_hours_enabled', 'business_hours_timezone', 'business_hours',
 		'hide_branding',
@@ -33,6 +37,7 @@ class Widget extends Model
     }
 
     /**
+<<<<<<< HEAD
      * Multi-Widget Support — internal admin label ke liye fallback,
      * jab tak agent koi custom naam na de. `name` column shayad
      * migration na chalne ki wajah se maujood na ho — us case me bhi
@@ -48,6 +53,8 @@ class Widget extends Model
     }
 
     /**
+=======
+>>>>>>> origin/main
      * Default schedule used when a widget hasn't configured business hours
      * yet: Mon-Fri 9am-6pm, closed Sat/Sun.
      */
@@ -126,4 +133,8 @@ class Widget extends Model
             return $time;
         }
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/main

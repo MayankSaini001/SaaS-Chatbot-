@@ -72,13 +72,18 @@ class WidgetController extends Controller
         // Agar name+email already POST mein aa rahe hain (submitVisitorInfo se)
         $infoCollected = ($visitorName && $visitorEmail) ? true : false;
 
+<<<<<<< HEAD
         $conversationData = [
+=======
+        $conversation = Conversation::create([
+>>>>>>> origin/main
             'widget_id'              => $widget->id,
             'tenant_id'              => $widget->tenant_id,
             'visitor_name'           => $visitorName ?? 'Visitor',
             'visitor_email'          => $visitorEmail,
             'visitor_ip'             => $request->ip(),
             'visitor_page'           => $request->page,
+<<<<<<< HEAD
             'user_agent'             => $request->userAgent(),
             'session_token'          => $sessionToken,
             'status'                 => 'open',
@@ -96,6 +101,12 @@ class WidgetController extends Controller
             unset($conversationData['user_agent']);
             $conversation = Conversation::create($conversationData);
         }
+=======
+            'session_token'          => $sessionToken,
+            'status'                 => 'open',
+            'visitor_info_collected' => $infoCollected,
+        ]);
+>>>>>>> origin/main
 
         Message::create([
             'conversation_id' => $conversation->id,
@@ -283,6 +294,7 @@ class WidgetController extends Controller
             \Illuminate\Support\Facades\Log::error('NewVisitorMessage broadcast failed: ' . $e->getMessage());
         }
 
+<<<<<<< HEAD
         // FAQ / Keyword Auto-Reply Bot — visitor ke message me koi active
         // keyword mile to turant automated reply bhej do (agent available
         // ho ya na ho), taaki visitor ko instant jawab mile.
@@ -314,6 +326,9 @@ class WidgetController extends Controller
             'message_id' => $message->id,
             'auto_reply' => $autoReplyPayload,
         ]);
+=======
+        return response()->json(['success' => true, 'message_id' => $message->id]);
+>>>>>>> origin/main
     }
 
     /**
@@ -466,13 +481,20 @@ class WidgetController extends Controller
 			'created_at'   => $message->created_at,
 			'is_edited'    => (bool) $message->is_edited,
 			'is_deleted'   => (bool) $message->is_deleted,
+<<<<<<< HEAD
 			'is_read'      => (bool) $message->is_read,
+=======
+>>>>>>> origin/main
 
 			'agent_name' => (
 				$message->sender_type === 'agent' && $message->sender_id && $message->sender
 			)
 				? $message->sender->name
+<<<<<<< HEAD
 				: ($message->sender_type === 'agent' ? 'Quick Reply' : null),
+=======
+				: null,
+>>>>>>> origin/main
 
 			'visitor_name' => $conversation->visitor_name ?? 'Visitor',
 		];
@@ -631,4 +653,8 @@ class WidgetController extends Controller
     {
         $conversation->runInactivityCheck();
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/main

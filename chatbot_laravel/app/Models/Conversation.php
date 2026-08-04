@@ -15,7 +15,11 @@ class Conversation extends Model
     protected $fillable = [
         'widget_id', 'tenant_id', 'agent_id',
         'visitor_name', 'visitor_email',
+<<<<<<< HEAD
         'visitor_ip', 'visitor_page', 'user_agent', 'status',
+=======
+        'visitor_ip', 'visitor_page', 'status',
+>>>>>>> origin/main
         'session_token', 'visitor_info_collected',
         'rating', 'rating_feedback',
     ];
@@ -25,6 +29,7 @@ class Conversation extends Model
         return $this->belongsTo(Widget::class);
     }
 
+<<<<<<< HEAD
     /**
      * Visitor Info & Insights — raw `user_agent` string se readable
      * Browser / OS / Device nikalta hai. Koi naya column/migration nahi
@@ -77,6 +82,8 @@ class Conversation extends Model
         return ['browser' => $browser, 'os' => $os, 'device' => $device];
     }
 
+=======
+>>>>>>> origin/main
     public function tenant()
     {
         return $this->belongsTo(Tenant::class);
@@ -200,6 +207,7 @@ class Conversation extends Model
     }
 
     /**
+<<<<<<< HEAD
      * Visitor Info & Insights — user_agent ko simple readable form me
      * todo ("Chrome on Windows · Desktop"), koi external package use
      * nahi kiya, bas common patterns check kiye hain.
@@ -259,6 +267,8 @@ class Conversation extends Model
     }
 
     /**
+=======
+>>>>>>> origin/main
      * Feature: Email the full chat transcript to the visitor once resolved.
      * Silently does nothing if visitor never gave an email.
      */

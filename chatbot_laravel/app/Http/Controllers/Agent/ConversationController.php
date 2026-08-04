@@ -27,6 +27,7 @@ class ConversationController extends Controller
 
 		}
 
+<<<<<<< HEAD
 		$widgets = \App\Models\Widget::where('tenant_id', auth()->user()->tenant_id)->orderBy('id')->get();
 
 		return view('agent.conversations.index', compact('conversations', 'widgets'));
@@ -64,6 +65,11 @@ class ConversationController extends Controller
         return response()->json(['success' => true]);
     }
 
+=======
+		return view('agent.conversations.index', compact('conversations'));
+	}
+
+>>>>>>> origin/main
     public function show(Conversation $conversation)
     {
         // Feature 4: Agent sirf apni assigned conversation dekh sakta hai
@@ -80,16 +86,20 @@ class ConversationController extends Controller
             abort(403);
         }
 
+<<<<<<< HEAD
         $unreadExisted = $conversation->messages()
             ->where('sender_type', 'visitor')
             ->where('is_read', false)
             ->exists();
 
+=======
+>>>>>>> origin/main
         $conversation->messages()
             ->where('sender_type', 'visitor')
             ->where('is_read', false)
             ->update(['is_read' => true]);
 
+<<<<<<< HEAD
         if ($unreadExisted) {
             try {
                 broadcast(new \App\Events\MessagesRead($conversation->id));
@@ -98,6 +108,8 @@ class ConversationController extends Controller
             }
         }
 
+=======
+>>>>>>> origin/main
         $messages = $conversation->messages()->oldest()->get();
 
         $agents = \App\Models\User::where('tenant_id', auth()->user()->tenant_id)
@@ -178,6 +190,7 @@ class ConversationController extends Controller
             ->where('ip_address', $conversation->visitor_ip)
             ->delete();
 
+<<<<<<< HEAD
         // Blocking marks the conversation as 'resolved', which also stops the
         // visitor from sending messages (WidgetController@sendMessage rejects
         // resolved conversations). Unblocking must undo that too, otherwise
@@ -187,6 +200,17 @@ class ConversationController extends Controller
             try {
                 event(new \App\Events\ConversationReopened($conversation->id));
             } catch (\Throwable $e) {}
+=======
+        // Blocking auto-resolves the conversation, so unblocking must
+        // reopen it — otherwise the visitor's old conversation stays
+        // locked forever (reply box disabled, widget rejects messages,
+        // and a fresh chat would start a brand new conversation instead
+        // of continuing this one).
+        $wasResolved = $conversation->status === 'resolved';
+
+        if ($wasResolved) {
+            $conversation->update(['status' => 'open']);
+>>>>>>> origin/main
         }
 
         $msg = $conversation->messages()->create([
@@ -200,7 +224,17 @@ class ConversationController extends Controller
             broadcast(new \App\Events\MessageSent($msg));
         } catch (\Throwable $e) {}
 
+<<<<<<< HEAD
         return back()->with('success', 'Visitor unblocked.');
+=======
+        if ($wasResolved) {
+            try {
+                broadcast(new \App\Events\ConversationReopened($conversation->id));
+            } catch (\Throwable $e) {}
+        }
+
+        return back()->with('success', 'Visitor unblocked. Conversation is active again.');
+>>>>>>> origin/main
     }
 
     // Agents list
@@ -512,11 +546,14 @@ class ConversationController extends Controller
             });
         }
 
+<<<<<<< HEAD
         // Multi-Widget Support — dashboard me widget ke hisaab se filter.
         if ($request->filled('widget_id')) {
             $query->where('widget_id', $request->widget_id);
         }
 
+=======
+>>>>>>> origin/main
         // Feature 4: Regular agents sirf apni conversations dekhein
         if ($user->role === 'agent') {
             $query->where('agent_id', $user->id);
@@ -574,8 +611,11 @@ class ConversationController extends Controller
                 'agent_id'      => $conv->agent_id,
                 'agent_name'    => $conv->agent ? $conv->agent->name : null,
                 'rating'        => $conv->rating,
+<<<<<<< HEAD
                 'widget_id'     => $conv->widget_id,
                 'widget_name'   => $conv->widget ? $conv->widget->displayName() : null,
+=======
+>>>>>>> origin/main
                 'tags'          => $conv->tags->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'color' => $t->color]),
             ];
         });
@@ -629,6 +669,7 @@ class ConversationController extends Controller
             \Illuminate\Support\Facades\Log::error('NoteAdded broadcast failed: ' . $e->getMessage());
         }
 
+<<<<<<< HEAD
         // @Mention — note body me "@Full Name" milte hi us teammate ko
         // notify karo (desktop notification, agent already-existing
         // 'agent.{id}' channel infra reuse karke).
@@ -652,6 +693,8 @@ class ConversationController extends Controller
             \Illuminate\Support\Facades\Log::error('NoteMentioned broadcast failed: ' . $e->getMessage());
         }
 
+=======
+>>>>>>> origin/main
         return response()->json([
             'success' => true,
             'note' => [
@@ -681,7 +724,11 @@ class ConversationController extends Controller
         return response()->json(['success' => true]);
     }
 
+<<<<<<< HEAD
     public function embed(?\App\Models\Widget $widget = null)
+=======
+    public function embed()
+>>>>>>> origin/main
     {
         $user = auth()->user();
 
@@ -692,18 +739,27 @@ class ConversationController extends Controller
                 ->with('error', 'Embed code tenant account se milta hai, admin se nahi.');
         }
 
+<<<<<<< HEAD
         $widgets = \App\Models\Widget::where('tenant_id', $tenantId)->orderBy('id')->get();
 
         if ($widgets->isEmpty()) {
             $created = \App\Models\Widget::create([
                 'tenant_id'   => $tenantId,
                 'name'        => 'Main Widget',
+=======
+        $widget = \App\Models\Widget::where('tenant_id', $tenantId)->first();
+
+        if (!$widget) {
+            $widget = \App\Models\Widget::create([
+                'tenant_id'   => $tenantId,
+>>>>>>> origin/main
                 'embed_token' => \Illuminate\Support\Str::random(32),
                 'color'       => '#6366f1',
                 'position'    => 'bottom-right',
                 'greeting'    => 'Hi! How can we help you?',
                 'is_active'   => true,
             ]);
+<<<<<<< HEAD
             $widgets = collect([$created]);
         }
 
@@ -758,11 +814,17 @@ class ConversationController extends Controller
         $widget->delete();
 
         return redirect()->route('agent.embed')->with('success', 'Widget deleted.');
+=======
+        }
+
+        return view('agent.embed', compact('widget'));
+>>>>>>> origin/main
     }
 
     public function updateWidget(Request $request)
     {
         $tenant = auth()->user()->tenant;
+<<<<<<< HEAD
 
         // widget_id form se aaya to usi widget ko target karo (multi-widget),
         // warna purana behaviour: tenant ka pehla widget (backward compat).
@@ -774,6 +836,11 @@ class ConversationController extends Controller
 
         $data = [
             'name'     => $request->name ?: $widget->name,
+=======
+        $widget = \App\Models\Widget::where('tenant_id', auth()->user()->tenant_id)->first();
+
+        $data = [
+>>>>>>> origin/main
             'title'    => $request->title,
             'greeting' => $request->greeting,
             'color'    => $request->color,
@@ -789,6 +856,7 @@ class ConversationController extends Controller
         try {
             $widget->update($data);
         } catch (\Throwable $e) {
+<<<<<<< HEAD
             // hide_branding/name column shayad migration na chalne ki wajah
             // se maujood nahi — usi ke bina baaki settings phir bhi save karo.
             unset($data['hide_branding']);
@@ -806,6 +874,20 @@ class ConversationController extends Controller
         }
 
         return redirect()->route('agent.embed', $widget)->with('success', 'Widget updated!');
+=======
+            // hide_branding column shayad migration na chalne ki wajah se
+            // maujood nahi — usi ke bina baaki settings phir bhi save karo.
+            unset($data['hide_branding']);
+            $widget->update($data);
+            \Illuminate\Support\Facades\Log::warning('Widget update retried without hide_branding: ' . $e->getMessage());
+        }
+
+        if (!$canWhiteLabel && $request->boolean('hide_branding')) {
+            return back()->with('error', 'Removing branding is a Pro/Enterprise feature. Please upgrade your plan.');
+        }
+
+        return back()->with('success', 'Widget updated!');
+>>>>>>> origin/main
     }
 
     public function updateBusinessHours(Request $request)
@@ -816,11 +898,15 @@ class ConversationController extends Controller
             'days'     => 'nullable|array',
         ]);
 
+<<<<<<< HEAD
         $widget = $request->filled('widget_id')
             ? \App\Models\Widget::where('id', $request->widget_id)
                 ->where('tenant_id', auth()->user()->tenant_id)
                 ->firstOrFail()
             : \App\Models\Widget::where('tenant_id', auth()->user()->tenant_id)->first();
+=======
+        $widget = \App\Models\Widget::where('tenant_id', auth()->user()->tenant_id)->first();
+>>>>>>> origin/main
 
         $schedule = [];
         foreach (\App\Models\Widget::DAYS as $day) {
@@ -838,7 +924,11 @@ class ConversationController extends Controller
             'business_hours'          => $schedule,
         ]);
 
+<<<<<<< HEAD
         return redirect()->route('agent.embed', $widget)->with('success', 'Business hours updated!');
+=======
+        return back()->with('success', 'Business hours updated!');
+>>>>>>> origin/main
     }
 
     public function getMessages(Conversation $conversation)

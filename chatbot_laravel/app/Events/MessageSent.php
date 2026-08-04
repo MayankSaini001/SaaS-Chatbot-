@@ -38,8 +38,12 @@ class MessageSent implements ShouldBroadcastNow
             'attachment'   => $this->message->attachment,
             'sender_type'  => $this->message->sender_type,
             'created_at'   => $this->message->created_at,
+<<<<<<< HEAD
             'agent_name'   => $this->message->sender?->name
                 ?? ($this->message->sender_type === 'agent' ? 'Quick Reply' : null),
+=======
+            'agent_name'   => $this->message->sender?->name,
+>>>>>>> origin/main
             'visitor_name' => $this->message->conversation?->visitor_name,
         ];
     }
