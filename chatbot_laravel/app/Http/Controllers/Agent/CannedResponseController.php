@@ -21,14 +21,16 @@ class CannedResponseController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required|string|max:100',
-            'body'  => 'required|string|max:2000',
+            'title'    => 'required|string|max:100',
+            'shortcut' => 'nullable|string|max:50',
+            'body'     => 'required|string|max:2000',
         ]);
 
         CannedResponse::create([
             'tenant_id' => auth()->user()->tenant_id,
             'user_id'   => auth()->id(),
             'title'     => $request->title,
+            'shortcut'  => $request->shortcut ? ltrim($request->shortcut, '/') : null,
             'body'      => $request->body,
         ]);
 
@@ -53,7 +55,7 @@ class CannedResponseController extends Controller
     {
         $responses = CannedResponse::where('tenant_id', auth()->user()->tenant_id)
             ->orderBy('title')
-            ->get(['id', 'title', 'body']);
+            ->get(['id', 'title', 'shortcut', 'body']);
 
         return response()->json($responses);
     }

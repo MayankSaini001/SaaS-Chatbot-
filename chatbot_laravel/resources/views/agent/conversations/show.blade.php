@@ -791,6 +791,20 @@ var lastMsgId = {{ $messages->last()->id ?? 0 }};
 
 var conversationId = {{ $conversation->id }};
 
+// Agent Productivity — merge-tag values for canned responses
+var mergeTagValues = {
+    '{visitor_name}': {!! Illuminate\Support\Js::from($conversation->visitor_name ?? 'there') !!},
+    '{tenant_name}':  {!! Illuminate\Support\Js::from(auth()->user()->tenant->name ?? '') !!},
+    '{agent_name}':   {!! Illuminate\Support\Js::from(auth()->user()->name) !!}
+};
+
+function applyMergeTags(text) {
+    Object.keys(mergeTagValues).forEach(function (tag) {
+        text = text.split(tag).join(mergeTagValues[tag]);
+    });
+    return text;
+}
+
 var csrfToken = '{{ csrf_token() }}';
 
 var isSending = false;
@@ -1355,11 +1369,12 @@ if (uploadFile) {
             btn.type = 'button';
             btn.className = 'canned-item';
             btn.dataset.body = item.body;
+            btn.dataset.shortcut = item.shortcut || '';
             btn.style.cssText = 'display:block;width:100%;text-align:left;padding:8px 10px;border:none;background:none;border-radius:10px;cursor:pointer;';
 
             var title = document.createElement('div');
             title.style.cssText = 'font-size:12.5px;font-weight:600;color:#4c1d95;';
-            title.textContent = item.title;
+            title.textContent = item.shortcut ? item.title + '  ·  /' + item.shortcut : item.title;
 
             var body = document.createElement('div');
             body.style.cssText = 'font-size:11.5px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
@@ -1393,11 +1408,42 @@ if (uploadFile) {
         if (!isOpen && !loaded) loadCannedResponses();
     });
 
+    // Agent Productivity — "/" type karte hi popover khulega aur
+    // shortcut/title ke against filter hoga (slash-command).
+    if (replyInputEl) {
+        replyInputEl.addEventListener('input', function () {
+            var val = replyInputEl.value;
+            if (val.indexOf('/') === 0) {
+                if (!loaded) loadCannedResponses();
+                cannedPopover.style.display = 'block';
+
+                var query = val.slice(1).toLowerCase();
+                var items = cannedList.querySelectorAll('.canned-item');
+                items.forEach(function (btn) {
+                    var shortcut = (btn.getAttribute('data-shortcut') || '').toLowerCase();
+                    var titleText = btn.querySelector('div').textContent.toLowerCase();
+                    var matches = !query || shortcut.indexOf(query) === 0 || titleText.indexOf(query) !== -1;
+                    btn.style.display = matches ? 'block' : 'none';
+                });
+            } else if (cannedPopover.style.display === 'block') {
+                cannedPopover.style.display = 'none';
+            }
+        });
+    }
+
     cannedList.addEventListener('click', function (e) {
         var btn = e.target.closest('.canned-item');
         if (!btn || !replyInputEl) return;
-        var text = btn.getAttribute('data-body');
-        replyInputEl.value = replyInputEl.value ? (replyInputEl.value + ' ' + text) : text;
+
+        // Agent Productivity — merge-tags apply karo insert karte waqt
+        var text = applyMergeTags(btn.getAttribute('data-body'));
+
+        if (replyInputEl.value.indexOf('/') === 0) {
+            // Slash-command se select hua -> poora text replace karo
+            replyInputEl.value = text;
+        } else {
+            replyInputEl.value = replyInputEl.value ? (replyInputEl.value + ' ' + text) : text;
+        }
         replyInputEl.focus();
         cannedPopover.style.display = 'none';
     });

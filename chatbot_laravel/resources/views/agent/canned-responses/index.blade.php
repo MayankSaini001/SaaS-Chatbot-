@@ -20,8 +20,22 @@
             @csrf
             <input type="text" name="title" placeholder="Short title (e.g. Greeting, Payment Issue)" required
                 class="border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+
+            <div>
+                <div class="flex items-center border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-indigo-400">
+                    <span class="px-3 text-sm text-gray-400 bg-gray-50 border-r select-none">/</span>
+                    <input type="text" name="shortcut" placeholder="Optional shortcut, e.g. pricing" maxlength="50"
+                        class="flex-1 px-3 py-2 text-sm focus:outline-none">
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Agents can type <code>/{shortcut}</code> in the reply box to insert this instantly.</p>
+            </div>
+
             <textarea name="body" rows="3" placeholder="Full message text agents will send..." required
                 class="border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"></textarea>
+            <p class="text-xs text-gray-400 -mt-2">
+                Tip: use <code>{visitor_name}</code>, <code>{tenant_name}</code>, <code>{agent_name}</code> — these auto-fill with real values when inserted.
+            </p>
+
             <button type="submit"
                 class="self-start px-6 py-2 rounded-lg text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700">
                 + Add Response
@@ -43,7 +57,12 @@
         @forelse($responses as $response)
         <div class="flex items-start justify-between gap-4 px-6 py-4 border-b last:border-0">
             <div class="flex-1 min-w-0">
-                <div class="font-medium text-gray-800 text-sm mb-1">{{ $response->title }}</div>
+                <div class="font-medium text-gray-800 text-sm mb-1">
+                    {{ $response->title }}
+                    @if($response->shortcut)
+                        <span class="ml-1.5 text-xs font-mono px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600">/{{ $response->shortcut }}</span>
+                    @endif
+                </div>
                 <div class="text-xs text-gray-500 line-clamp-2">{{ $response->body }}</div>
                 <div class="text-xs text-gray-400 mt-1.5">Added by {{ $response->author->name ?? 'Agent' }}</div>
             </div>

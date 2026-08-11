@@ -10,6 +10,7 @@ class CannedResponse extends Model
         'tenant_id',
         'user_id',
         'title',
+        'shortcut',
         'body',
     ];
 
