@@ -1822,6 +1822,7 @@ if (notesList) {
             }
             if (pillsBox.querySelectorAll('.tag-pill').length === 0 && emptyMsg) {
                 emptyMsg.style.display = 'inline';
+                
             }
         });
     });
